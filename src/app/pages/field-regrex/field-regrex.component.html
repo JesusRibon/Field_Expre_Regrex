@@ -1,0 +1,62 @@
+<div class="card">
+  <div class="sub">
+    <p class="title">Validacion de Estructura</p>
+  </div>
+  <div class="center">
+    <form [formGroup]="form" class="content-input">
+      <input type="text" class="field" formControlName="fieldText" required />
+      <span *ngIf="form.get('fieldText')?.touched && form.get('fieldText')?.invalid"
+      class="mensage-error">
+        Campo Obligatorio
+      </span>
+      <button
+        (click)="validateRegrex()"
+        [disabled]="form.invalid"
+        class="button"
+      >
+        <p>Validar</p>
+      </button>
+    </form>
+  </div>
+  <div
+    class="below"
+    [ngClass]="{ 'error-background': error, 'success-background': success }"
+  >
+    <div class="messague">
+      <span *ngIf="error" class="error">
+        {{ error }}
+      </span>
+      <span *ngIf="success" class="success">
+        {{ success }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="show-variable">
+  <div class="content">
+    <form [formGroup]="formType" class="content-input" >
+      <input type="text" class="type" formControlName="type">
+      <span *ngIf="formType.get('type')?.touched && formType.get('type')?.invalid"
+      class="mensage-error">
+        Campo Obligatorio
+      </span>
+      <button 
+      class="button"
+      [disabled]="formType.invalid"
+      (click)=" validateTypeAndvariable()"
+      >
+        <p>Variables</p>
+      </button>
+    </form>
+  </div>
+  <div class="messague">
+    <span *ngIf="message" class="error">
+      {{message}}
+    </span>
+    <span *ngIf="type && variable"  class="typeAndVaribel">
+      <p>Para el tipo de dato {{type}}</p>
+      <p>Las variables ingresadas son: {{variable}}</p>
+    </span>
+  </div>
+</div>
