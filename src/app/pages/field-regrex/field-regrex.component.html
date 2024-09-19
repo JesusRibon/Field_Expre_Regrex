@@ -1,10 +1,10 @@
-<div class="card">
+<!-- <div class="card">
   <div class="sub">
     <p class="title">Validacion de Estructura</p>
   </div>
   <div class="center">
     <form [formGroup]="form" class="content-input">
-      <input type="text" class="field" formControlName="fieldText" required />
+      <textarea type="text" class="field" formControlName="fieldText" required >~</textarea>
       <span *ngIf="form.get('fieldText')?.touched && form.get('fieldText')?.invalid"
       class="mensage-error">
         Campo Obligatorio
@@ -59,4 +59,64 @@
       <p>Las variables ingresadas son: {{variable}}</p>
     </span>
   </div>
+</div> -->
+
+
+
+<div class="layout">
+  <div class="left">
+    <form [formGroup]="form" class="textarea">
+      <textarea class="overflow" formControlName="fieldText" placeholder="Digite su codigo aqui..."></textarea>
+    </form>
+  </div>
+  <div class="right">
+    <span class="ubic-icon">
+      <span class="material-symbols-outlined" (click)="validateRegrex()">
+        terminal 
+      </span>
+      <span class="terminal">Terminal VS CODE</span>
+    </span>
+
+    <div class="ubic-message overflow" *ngIf="error || success">
+      <span *ngFor="let err of error" class="error" >
+       <li> {{ err}}</li>
+      </span>
+      <span *ngFor="let succe of success" class="success">
+       <li>
+        {{ succe }}
+       </li>
+      </span>
+    </div>
+  </div>
+</div>
+
+
+<div class="footer">
+  <div class="ubic-input">
+    <form [formGroup]="formType" class="content-input">
+      <input 
+      type="text" class="type" formControlName="type">
+      <span *ngIf="formType.get('type')?.touched && formType.get('type')?.invalid"
+      class="mensage-error">
+        Campo Obligatorio
+      </span>
+      <button 
+      class="button" 
+      (click)="validateTypeAndVariable()"
+      [disabled]="formType.invalid"
+      >
+       Variables
+      </button>
+    </form>
+  </div>
+
+  <div class="ubic-left overflow" *ngIf="error || success">
+    <span *ngFor="let err of errorTypeValidation" class="error" >
+      <li> {{ err}}</li>
+     </span>
+     <span *ngFor="let succe of successTypeValidation" class="success">
+      <li>
+       {{ succe }}
+      </li>
+     </span>
 </div>

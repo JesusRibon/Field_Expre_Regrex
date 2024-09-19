@@ -9,14 +9,13 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 export class FieldRegrexComponent {
   form!: FormGroup;
   formType!: FormGroup;
-  success: string = '';
-  error: string = '';
-  type: string = '';
-  variable: string = '';
-  message: string = '';
-  regrex =
-    /^declare\s+([a-zA-Z][a-zA-Z0-9_]{0,14}(?:\s*,\s*[a-zA-Z][a-zA-Z0-9_]{0,14})*)\s+(entero|real|cadena|logico|fecha)\s*;$/i
+  success: string[] = [];
+  error: string[] = [];
+  successTypeValidation: string[] = [];
+  errorTypeValidation: string[] = [];
+  variablesDeclaradas: Map<string, string> = new Map();
 
+  regrex = /^declare\s+([a-zA-Z][a-zA-Z0-9_]{0,14}(?:\s*,\s*[a-zA-Z][a-zA-Z0-9_]{0,14})*)\s+(entero|real|cadena|logico|fecha)\s*;$/i;
 
   constructor() {
     this.form = new FormGroup({
@@ -28,44 +27,95 @@ export class FieldRegrexComponent {
     });
   }
 
+
   validateRegrex() {
-    this.error = '';
-    this.success = '';
+    this.error = [];
+    this.success = [];
+    this.variablesDeclaradas.clear();
     const getField = this.form.get('fieldText')?.value;
-    if (!getField.startsWith('declare ')) {
-      this.error = 'La declaración debe comenzar con "declare"';
-    } else if (!getField.endsWith(';')) {
-      this.error = 'La declaración debe finalizar con ";"';
-    } else if (!this.regrex.test(getField)) {
-      this.error = 'Estructura invalidad';
-    } else {
-      this.success = 'Estructura validad';
+    const lineas = getField.split('\n');
+
+    for (let i = 0; i < lineas.length; i++) {
+      const linea = lineas[i].trim();
+
+      if (linea === '') continue;
+
+      if (!linea.startsWith('declare ')) {
+        this.error.push(`Línea ${i + 1}: La declaración debe comenzar con "declare".`);
+      } else if (!linea.endsWith(';')) {
+        this.error.push(`Línea ${i + 1}: La declaración debe finalizar con ";".`);
+      } else if (!this.regrex.test(linea)) {
+        this.error.push(`Línea ${i + 1}: Estructura inválida.`);
+      } else {
+        const partes = linea.match(this.regrex);
+        const listaVariables = partes![1].split(/\s*,\s*/);
+        const tipoDato = partes![2];
+
+        let variableRepetida = false;
+
+        for (let variable of listaVariables) {
+          if (this.variablesDeclaradas.has(variable)) {
+            this.error.push(`Línea ${i + 1}: La variable "${variable}" ya ha sido declarada con tipo "${this.variablesDeclaradas.get(variable)}".`);
+            variableRepetida = true;
+            break;
+          }
+          this.variablesDeclaradas.set(variable, tipoDato);
+        }
+
+        if (!variableRepetida) {
+          this.success.push(`Línea ${i + 1}: Declaración válida.`);
+        }
+      }
     }
   }
 
-  validateTypeAndvariable() {
-    this.message = '';
-    this.type = '';
-    this.variable = '';
+
+  validateTypeAndVariable() {
+    this.errorTypeValidation = [];
+    this.successTypeValidation = [];
     const regrexType = /^(entero|real|cadena|logico|fecha)$/;
     const getType = this.formType.get('type')?.value;
-    if (regrexType.test(getType)) {
-      const getField = this.form.get('fieldText')?.value;
-      const typeEntered = getField.match(this.regrex);
-      if (typeEntered) {
-        if (getType === typeEntered[2]) {
-          this.type = typeEntered[2];
-          this.variable = typeEntered[1];
-        } else {
-          this.message =
-            'el tipo de dato ' + getType + ' no fue ingresado por el usuario';
+
+    if (!regrexType.test(getType)) {
+      this.errorTypeValidation.push('El tipo de dato es incorrecto');
+      return;
+    }
+
+    const getField = this.form.get('fieldText')?.value;
+    const lineas = getField.split('\n');
+    let variablesEncontradas = false;
+    const variablesDeclaradas: Map<string, { tipo: string, linea: number }> = new Map();
+
+
+    for (let i = 0; i < lineas.length; i++) {
+      const linea = lineas[i].trim();
+      const tipoDeclarado = linea.match(/declare\s+([\w\s,]+)\s+(\w+)/);
+
+      if (tipoDeclarado) {
+        const [_, variables, tipoDato] = tipoDeclarado;
+        const listaVariables = variables.split(/\s*,\s*/);
+
+        for (const variable of listaVariables) {
+          if (!variablesDeclaradas.has(variable)) {
+            variablesDeclaradas.set(variable, { tipo: tipoDato, linea: i + 1 });
+          }
         }
-      } else if (typeEntered === null) {
-        this.message =
-          'Si la estructura ingresada es incorrecta no se mostrara el tipo de dato y variables ingresadas';
       }
-    } else {
-      this.message = 'El tipo de dato es incorrecto';
+    }
+
+    for (const [variable, { tipo, linea }] of variablesDeclaradas) {
+      if (tipo === getType) {
+        this.successTypeValidation.push(`Línea ${linea}: Variable "${variable}" es válida para el tipo "${getType}".`);
+        variablesEncontradas = true;
+      }
+    }
+
+    if (!variablesEncontradas) {
+      this.errorTypeValidation.push(`No se encontraron variables del tipo "${getType}".`);
     }
   }
+
+
+
+
 }
